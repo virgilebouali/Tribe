@@ -82,15 +82,6 @@ const AddItemForm = () => {
       const formDataImage = new FormData();
       formDataImage.append('image', formData.image);
 
-      const responseImage = await axios.post('http://localhost:3000/uploadfile', formDataImage, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      console.log(responseImage.data);
-
       // Réinitialisation du formulaire
       setFormData({
         title: '',
