@@ -14,28 +14,31 @@ const LoginHero = () => {
     navigate('/register');
   }
 
-  const onSubmitLogin = async (data) => {
-    console.log("Form data:", data);
-
-    try {
-      const response = await axios.post('http://localhost:3000/login', data);
-
-      if (response.data.success) {
-        toast.success('Connexion réussie');
-        localStorage.setItem('token', response.data.token);
-        navigate('/profile')
-        console.log('Connexion réussie:', response.data.user);
-        // Rediriger ou effectuer d'autres actions côté client
-      } else {
-        toast.error("Email ou Mot de passe incorrect");
-        console.error('Erreur de connexion:', response.data.error);
-      }
-    } catch (error) {
-      toast.error("Email ou mot de passe incorrect");
-      console.error('Erreur lors de la connexion:', error);
-    }
-
-    
+  const onSubmitLogin = (data) => {
+    axios
+      .post("http://localhost:3000/login", data)
+      .then((res) => {
+        if (res.data.token) {
+          const token = res.data.token;
+          localStorage.setItem("token", token);
+          console.log(token)
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          navigate("/profile");
+          toast.success("Connexion réussie");
+        } else {
+          console.error("Erreur lors de la connexion :");
+          toast.error("Les identifiants sont incorrects");
+        }
+      })
+      .catch((error) => {
+        if (error.response && error.response.status === 401) {
+          // Erreur d'authentification, afficher un message d'erreur personnalisé
+          toast.error("Les identifiants sont incorrects");
+        } else {
+          // Autre erreur, afficher un message générique
+          toast.error("Les identifiants sont incorrect.");
+        }
+      });
   };
 
 

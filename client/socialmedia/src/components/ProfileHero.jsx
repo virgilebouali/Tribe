@@ -1,56 +1,73 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 import axios from "axios";
 import jwt_decode from "jwt-decode";
 import { Button } from "@material-tailwind/react";
 import { FaPencilAlt, FaCamera } from "react-icons/fa";
 import { Textarea } from "@material-tailwind/react";
+import toast from "react-hot-toast";
+
+
 
 const ProfileHero = () => {
+  const Navigate = useNavigate();
   const [data, setData] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [showTextarea, setShowTextarea] = useState(false);
+
   const token = localStorage.getItem("token");
-
+  console.log('token user:', token)
   useEffect(() => {
-    const getUserData = async () => {
-      if (token) {
-        const decodedToken = jwt_decode(token);
-        const userId = decodedToken.userId;
+    if (token) {
+      const decodedToken = jwt_decode(token);
+      const userId = decodedToken.userId;
+     console.log('user:', userId)
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
 
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        };
-
-        try {
-          const response = await axios.get(`http://localhost:3000/user/${userId}`, config);
-          setData(response.data);
-        } catch (error) {
-          console.error("Erreur lors de la récupération des données de l'utilisateur :", error);
-        }
-      }
-    };
-
-    getUserData();
+      axios.get(`http://localhost:3000/user/${userId}`, config)
+        .then((response) => {
+          const data = response.data;
+          setData(data);
+        })
+        .catch((error) => {
+          console.error('Erreur lors de la récupération des favoris :', error);
+        });
+    }
   }, [token]);
 
+    
 
-  const handleUpload = async () => {
-
+  const handleUpload = async (req) => {
+    // Assurez-vous que req.userId est correctement défini
+  
     const decodedToken = jwt_decode(token);
-        const userId = decodedToken.userId;
+    const serverUserId = decodedToken.userId;
+  
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  
+    console.log(serverUserId);
+  
     try {
       const formData = new FormData();
       formData.append('profilePicture', selectedFile);
   
-      await axios.patch(`http://localhost:3000/user/${userId}/uploadprofilpicture`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log(formData)
+      await axios.patch(
+        `http://localhost:3000/user/${serverUserId}/uploadprofilpicture`,
+        formData,
+        config
+      );
+  
+      console.log(formData);
+      toast.success('Photo téléchargée avec succès');
   
       // Mettez à jour l'interface utilisateur ou affichez un message de réussite
     } catch (error) {
@@ -58,13 +75,12 @@ const ProfileHero = () => {
       // Gérez les erreurs et affichez un message d'échec si nécessaire
     }
   };
-
   return (
 	<>
     <div className=" p-8 sm:flex sm:space-x-6 bg-white dark:text-gray-900 my-12 shadow-md w-auto mr-12 border justify-stretch">
 	<div className="flex-shrink-0 w-full mb-6 h-44 sm:h-32 sm:w-32 sm:mb-0">
 		<img src="https://source.unsplash.com/500x500/?portrait?1" alt="" className="object-cover object-center w-full h-full rounded-full dark:bg-gray-500" />
-    <Button variant="outfilled" className="rounded-full text-black text-sm">
+    <Button variant="filled" className="rounded-full text-black text-sm">
   <label htmlFor="file-input" className="cursor-pointer">
     <FaCamera className="text-black hover:text-yellow" />
   </label>
@@ -110,7 +126,7 @@ const ProfileHero = () => {
           ) : null}
 
 <Button
-              variant="outfilled"
+              variant="filled"
               className="rounded-full text-black text-sm flex mr-4 hover:text-green"
               onClick={() => setShowTextarea(!showTextarea)}
             >
