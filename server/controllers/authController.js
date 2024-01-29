@@ -2,6 +2,12 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import dotenv from "dotenv";
+dotenv.config();
+
+const jwtSecret = process.env.JWT;
+
+
 
 const register = async (req, res) => {
     try {
@@ -25,11 +31,20 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
+
+
+
+
+    
     try {
+
+        let token = null;
+
         const { email, password } = req.body;
 
         // Trouver l'utilisateur par e-mail dans la base de données
         const user = await User.findOne({ email });
+        console.log(user)
 
         if (!user) {
             return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
@@ -39,8 +54,12 @@ const login = async (req, res) => {
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (passwordMatch) {
+            const jwtOptions = {
+                expiresIn: "24h", // Durée de validité du JWT
+              };
             // Générer un JWT
-            const token = jwt.sign({ userId: user._id }, 'votre_clé_secrète');
+            const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: "24h" });
+            console.log(token)
 
             console.log('Connexion réussie:', user);
             res.status(200).json({ success: true, user, token });

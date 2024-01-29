@@ -2,7 +2,8 @@
 import User from "../models/User.js";
 import multer from "multer";
 import path from 'path';
-
+import dotenv from "dotenv";
+dotenv.config();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -49,8 +50,13 @@ const findById = async (req, res) => {
 
 const updateProfileImage = async (req, res) => {
   try {
+    // Vérifiez si l'utilisateur est authentifié
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: 'Utilisateur non authentifié.' });
+    }
+
     const userId = req.user.id;
-    console.log('Received request to update profile picture for userId:', req.user.id);
+    console.log('Received request to update profile picture for userId:', userId);
 
     // Utilisation de multer pour gérer l'upload de l'image
     upload.single('profilePicture')(req, res, async function (err) {
