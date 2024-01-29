@@ -1,6 +1,6 @@
 import express from "express";
 import { register, login } from "./controllers/authController.js";
-import findById from "./controllers/userController.js";
+import { findById, updateProfileImage } from "./controllers/userController.js";
 import itemController from "./controllers/itemController.js";
 import multer from "multer";
 import { v4 as uuidv4 } from "uuid";
@@ -10,7 +10,8 @@ const router = express.Router();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads');
+    // Utilisez des barres obliques inverses doubles pour échapper aux caractères d'échappement
+    cb(null, 'C:\\Users\\1337\\socialmern2024\\client\\socialmedia\\public');
   },
   filename: function (req, file, cb) {
     cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
@@ -35,6 +36,7 @@ const upload = multer({
   limits: { fileSize: 10000000000 },
 }).single("image");
 
+
 router.post("/register", register);
 router.post("/login", login);
 
@@ -42,18 +44,12 @@ router.post("/login", login);
 router.post("/additem", upload, itemController.createItem);
 router.get("/items", itemController.getItems);
 
-// Route pour télécharger l'image séparément
-router.post('/uploadfile', upload, (req, res, next) => {
-  const file = req.file;
-  console.log(file);
-  if (!file) {
-    const error = new Error('Veuillez télécharger un fichier');
-    error.httpStatusCode = 400;
-    return next(error);
-  }
-  res.send(file);
-});
+router.delete('/items/:id', itemController.deleteItem);
 
+// Route pour télécharger l'image séparément
+router.post('/uploadfile', upload)
+
+router.patch('/user/:userId/uploadprofilpicture', upload)
 router.get("/user/:userId", findById);
 
 export default router;

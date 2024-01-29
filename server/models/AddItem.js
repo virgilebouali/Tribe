@@ -28,13 +28,13 @@ const AddItemSchema = new mongoose.Schema({
     required: true,
   },
   owner: {
-    type: mongoose.Schema.Types.ObjectId,
+  type: mongoose.Schema.Types.ObjectId, ref: 'User' ,
     ref: "User",
     required: true,
   },
   image: {
     type: String,
-    required: false
+    
 
   },
   created_at: {
