@@ -2,10 +2,7 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
 
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-  },
+
   username: {
     type: String,
     required: true,
@@ -22,8 +19,9 @@ const userSchema = new mongoose.Schema({
     min: 8,
     max: 12,
   },
-  profilePicture: {
+  image: {
     type: String,
+    required: false
   },
   description: {
     type: String,

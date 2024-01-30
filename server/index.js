@@ -9,6 +9,7 @@ import morgan from "morgan";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import router from "./router.js";
+
 import fs from "fs"
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,7 +21,7 @@ app.use(
       origin: "http://localhost:5173",
     })
   );
-  
+
 app.use(express.json());
 app.use(router);
 app.use(helmet());

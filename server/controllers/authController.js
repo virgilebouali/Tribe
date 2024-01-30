@@ -8,27 +8,36 @@ dotenv.config();
 const jwtSecret = process.env.JWT;
 
 
-
 const register = async (req, res) => {
     try {
+        // Extract other form data
         const { username, email, password } = req.body;
 
-        // Hasher le mot de passe avec bcrypt
+        // Check if an image is uploaded
+    const image = req.file ? req.file.filename : null;
+
+        // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const newUser = new User({ username, email, password: hashedPassword });
-        const savedUser = await newUser.save();
+        // Create a new user
+        const newUser = new User({
+            username,
+            email,
+            password: hashedPassword, // Use the hashed password
+            image: image, // Include the image path
+        });
+          console.log(newUser)
+        // Save the user to the database
+        const user = await newUser.save();
 
-        // Générer un JWT
-        const token = jwt.sign({ userId: savedUser._id }, process.env.SECRET);
-        console.log(token)
-        res.status(201).json({ success: true, user: savedUser, token });
+        // Respond with success message or user data
+        res.status(201).json({ success: true, user });
     } catch (error) {
-        console.error('Erreur d\'inscription:', error);
-        res.status(500).json({ success: false, error: 'Erreur d\'inscription' });
+        console.error('Error during registration:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
-    
 };
+
 
 const login = async (req, res) => {
 

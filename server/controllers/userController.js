@@ -1,9 +1,14 @@
 // controllers/userController.js
 import User from "../models/User.js";
+import Item from "../models/AddItem.js";
+import jwt from "jsonwebtoken"
 import multer from "multer";
 import path from 'path';
 import dotenv from "dotenv";
 dotenv.config();
+
+const jwtSecret = process.env.JWT;
+
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -48,43 +53,60 @@ const findById = async (req, res) => {
   }
 };
 
-const updateProfileImage = async (req, res) => {
+
+
+const getUserItems = async (req, res) => {
   try {
-    // Vérifiez si l'utilisateur est authentifié
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ error: 'Utilisateur non authentifié.' });
+    // Extraction du token JWT à partir de l'en-tête Authorization
+    const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ error: 'Token JWT manquant.' });
     }
 
-    const userId = req.user.id;
-    console.log('Received request to update profile picture for userId:', userId);
+    // Vérification du jeton JWT et récupération de l'ID de l'utilisateur
+    const decoded = jwt.verify(token, process.env.JWT);
+    const userId = decoded.userId;
+    // Recherche de l'utilisateur dans la base de données
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(401).json({ error: 'Utilisateur non trouvé.' });
+    }
 
-    // Utilisation de multer pour gérer l'upload de l'image
-    upload.single('profilePicture')(req, res, async function (err) {
-      if (err instanceof multer.MulterError) {
-        console.error(err);
-        return res.status(500).json({ error: 'Erreur lors du traitement de l\'image.' });
-      } else if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Une erreur inattendue s\'est produite.' });
-      }
-
-      // Si tout se passe bien, mettez à jour le champ profileImage de l'utilisateur dans la base de données
-      const imagePath = req.file.path;
-
-      // Utilisez findByIdAndUpdate avec un objet $set pour effectuer une mise à jour partielle
-      console.log('user modif:', userId);
-      console.log('req.file:', req.file); // Ajout de ce log pour déboguer
-
-      await User.findByIdAndUpdate(userId, { $set: { profilePicture: imagePath } });
-
-      // Renvoyez une réponse appropriée
-      res.status(200).json({ message: 'Image de profil mise à jour avec succès.' });
-    });
+    // Utilisation de Mongoose pour récupérer les éléments de l'utilisateur basés sur la propriété owner
+    const userItems = await Item.find({ owner: userId });
+ console.log(userItems)
+    // Envoyer les éléments de l'utilisateur en tant que réponse
+    res.status(200).json({ userItems });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Une erreur s\'est produite lors de la mise à jour de l\'image de profil.' });
+    console.error('Erreur lors de la récupération des éléments de l\'utilisateur :', error);
+    res.status(500).json({ error: 'Erreur interne du serveur.' });
   }
 };
 
 
-export { findById, updateProfileImage };
+
+
+
+
+const updateProfileImage = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const profilePicturePath = req.file.path;
+
+    // Update the user's profile picture in the database
+    const updatedUser = await User.findByIdAndUpdate(userId, { image: profilePicturePath }, { new: true });
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(200).json({ success: true, message: 'Profile picture updated successfully', user: updatedUser });
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+};
+
+
+export { findById, updateProfileImage, getUserItems };
